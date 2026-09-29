@@ -1,0 +1,8 @@
+title: Quit All Native for macOS
+description: Quit every normal Mac app with one click. Native Apple silicon, no Rosetta, open source, and AlDente-safe.
+lang: en-AU
+url: https://heyjamestorres.github.io
+baseurl: /quit-all-native-macos
+repository: heyjamestorres/quit-all-native-macos
+plugins:
+  - jekyll-github-metadata

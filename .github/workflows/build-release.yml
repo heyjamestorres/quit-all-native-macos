@@ -1,0 +1,43 @@
+name: Build and release
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: macos-15
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Build Apple-silicon app
+        run: ./build.sh dist
+
+      - name: Verify packaged application
+        run: |
+          VERIFY_DIR="$(mktemp -d)"
+          ditto -x -k dist/Quit-All-Apple-Silicon.zip "$VERIFY_DIR"
+          codesign --verify --deep --strict --verbose=2 "$VERIFY_DIR/Quit All.app"
+          test "$(lipo -archs "$VERIFY_DIR/Quit All.app/Contents/MacOS/Quit All")" = "arm64"
+
+      - name: Save build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Quit-All-Apple-Silicon
+          path: dist/Quit-All-Apple-Silicon.zip
+
+      - name: Publish tagged release
+        if: startsWith(github.ref, 'refs/tags/')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: >-
+          gh release create "${GITHUB_REF_NAME}"
+          dist/Quit-All-Apple-Silicon.zip
+          --title "Quit All ${GITHUB_REF_NAME}"
+          --generate-notes
